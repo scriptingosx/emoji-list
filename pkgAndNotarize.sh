@@ -30,8 +30,8 @@ application_sign_cert="Developer ID Application: ${developer_name_and_id}"
 credential_profile="notary-scriptingosx"
 
 # build info
-product_name="utiluti"
-binary_names=( "utiluti" )
+product_name="emoji-list"
+binary_names=( "emoji-list" )
 
 # pkg info
 pkg_name="$product_name"
