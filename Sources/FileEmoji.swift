@@ -10,7 +10,7 @@ import Foundation
 enum FileEmoji: String {
   case application = "🧑‍💻"
   case directory = "📁"
-  case executable = "⚙️"
+  case executable = "🚀"
   case file = "📄"
   case link = "🔗"
   case volume = "💾"
