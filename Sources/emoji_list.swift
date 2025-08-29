@@ -25,7 +25,7 @@ struct emoji_list: ParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "emoji-list",
     abstract: "list directory contents using emoji",
-    version: "0.1"
+    version: "0.2"
   )
 
   // MARK: flags
