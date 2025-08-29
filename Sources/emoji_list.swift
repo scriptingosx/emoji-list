@@ -20,11 +20,15 @@ import ArgumentParser
 
 @main
 struct emoji_list: ParsableCommand {
+  // MARK: configuration
+
   static let configuration = CommandConfiguration(
     commandName: "emoji-list",
     abstract: "list directory contents using emoji",
     version: "0.1"
   )
+
+  // MARK: flags
 
   @Flag(
     name: [.customShort("a"), .customLong("all")],
@@ -47,11 +51,22 @@ struct emoji_list: ParsableCommand {
   )
   var noRecursion = false
 
+  @Flag(
+    name: .shortAndLong,
+    help: "reverse the order of the sort"
+  )
+  var reverseSort = false
+
+  // MARK: argument
+
   @Argument(
     help: ArgumentHelp("path to list", valueName: "path"),
     completion: .file()
   )
   var paths: [String] = ["."]
+
+
+  // MARK: functions
 
   func spaces(_ count: Int) -> String {
     "".padding(toLength: count, withPad: " ", startingAt: 0)
@@ -62,8 +77,6 @@ struct emoji_list: ParsableCommand {
   }
 
   func printItem(_ path: String, relativeTo parent: URL, indent: Int) {
-//    if ![".", ".."].contains(path) && path.hasPrefix(".") && !showAll { return }
-
     let url = URL(fileURLWithPath: path, relativeTo: parent)
     guard url.fileExists else { return }
 
@@ -77,10 +90,14 @@ struct emoji_list: ParsableCommand {
   }
 
   func printItems(_ paths: [String], relativeTo parent: URL, indent: Int) {
-    for path in paths {
+    // sort the items
+    let sorted = paths.sorted { $0.localizedCompare($1) == (reverseSort ? .orderedDescending : .orderedAscending) }
+    for path in sorted {
       printItem(path, relativeTo: parent, indent: indent)
     }
   }
+
+  // MARK: run
 
   func run() {
     for (index, path) in paths.enumerated() {

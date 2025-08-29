@@ -1,1 +1,0 @@
-Sources/emoji-list.swift
