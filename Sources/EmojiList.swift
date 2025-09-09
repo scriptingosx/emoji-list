@@ -19,13 +19,13 @@ import Foundation
 import ArgumentParser
 
 @main
-struct emoji_list: ParsableCommand {
+struct EmojiList: AsyncParsableCommand {
   // MARK: configuration
 
   static let configuration = CommandConfiguration(
     commandName: "emoji-list",
     abstract: "list directory contents using emoji",
-    version: "0.2"
+    version: "0.3"
   )
 
   // MARK: flags
@@ -57,6 +57,28 @@ struct emoji_list: ParsableCommand {
   )
   var reverseSort = false
 
+  @Option(
+    name: .customLong("map"),
+    help: ArgumentHelp(
+      "list of emojis to use",
+      discussion: """
+      A string mapping characters to be used for the different file types.
+      The position of the character maps to the file type:
+      1: 🧑‍💻 application/bundle
+      2: 📁 directory/folder
+      3: 🚀 executable
+      4: 📄 file
+      5: 🔗 symbolic link/alias
+      6: 💾 volume
+      A dot '.' in any position will use the default emoji.
+      You can also set the 'EMOJI_LIST_MAP' environment variable.
+      For example, a map of "🕹️📂⚙️📜⛓️📀" will replace all emojis,
+      a map of "..⚙️" will replace only the executable emoji.
+      """
+    )
+  )
+  var emojiMap: String?
+
   // MARK: argument
 
   @Argument(
@@ -72,11 +94,11 @@ struct emoji_list: ParsableCommand {
     "".padding(toLength: count, withPad: " ", startingAt: 0)
   }
 
-  func emoji(for url: URL) -> String {
-    FileEmoji.emoji(for: url).string
+  mutating func emoji(for url: URL) -> String {
+    FileEmoji.emoji(for: url).string(withMap: map)
   }
 
-  func printItem(_ path: String, relativeTo parent: URL, indent: Int) {
+  mutating func printItem(_ path: String, relativeTo parent: URL, indent: Int) {
     let url = URL(fileURLWithPath: path, relativeTo: parent)
     guard url.fileExists else { return }
 
@@ -89,7 +111,7 @@ struct emoji_list: ParsableCommand {
     }
   }
 
-  func printItems(_ paths: [String], relativeTo parent: URL, indent: Int) {
+  mutating func printItems(_ paths: [String], relativeTo parent: URL, indent: Int) {
     // sort the items
     let sorted = paths.sorted { $0.localizedCompare($1) == (reverseSort ? .orderedDescending : .orderedAscending) }
     for path in sorted {
@@ -97,9 +119,30 @@ struct emoji_list: ParsableCommand {
     }
   }
 
+  lazy var map: String = {
+    let map = emojiMap ??
+    ProcessInfo.processInfo.environment["EMOJI_LIST_MAP"]
+
+    let defaultMap = FileEmoji.defaultMap
+
+    guard let map else { return defaultMap }
+    var mergedMap = ""
+    for (index, defaultChar) in defaultMap.enumerated() {
+      if index < map.count {
+        let char = map[index]
+        if char != "." && char != " " {
+          mergedMap.append(char)
+          continue
+        }
+      }
+      mergedMap.append(defaultChar)
+    }
+    return mergedMap
+  }()
+
   // MARK: run
 
-  func run() {
+  mutating func run() {
     for (index, path) in paths.enumerated() {
       let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
       let url = URL(fileURLWithPath: path, relativeTo: cwd)
